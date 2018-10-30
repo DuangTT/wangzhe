@@ -1,0 +1,553 @@
+package wangzhe;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Scanner;
+/**
+ * 每个人物的基本属性
+ * @author Administrator
+ *
+ */
+class basic
+{
+	public
+	String name;
+	int x; // 行
+	int y; // 列
+	int hp = 0;
+	int mp = 0;
+	int exp = 0;
+	basic()
+	{
+		name = "未知";
+		x = 0;
+		y = 0;
+	}
+}
+
+/**
+ * 第一类人物：
+ * @author Administrator
+ *
+ */
+
+class type1 extends basic
+{
+public
+	int zhaoShi;
+	type1()
+	{
+		super();
+	}
+	void init(String name_v, int x_v, int y_v, int hp_v, int mp_v, int exp_v, int zhaoshi_v)
+	{
+		Scanner in = new Scanner(System.in);
+		int i;
+		x = x_v;
+		y = y_v;
+		hp = hp_v;
+		mp = mp_v;
+		exp = exp_v;
+		name = name_v;
+		if(zhaoshi_v == 1) // 治疗
+		{
+			zhaoShi = 1;
+		}
+		if(zhaoshi_v == 2) // 攻击
+		{
+			zhaoShi = 2;
+		}
+	}
+	void show()
+	{
+		System.out.println(" 名字 —— hp值 —— mp值 —— exp值   ");
+		System.out.println(name + " " + hp + " " + mp + " " + exp);
+	}
+}
+
+/**
+ * 玩家
+ * @author Administrator
+ *
+ */
+class Player
+{
+public
+	type1 jueSe[] = new type1 [2];
+	Player()
+	{
+		Scanner in = new Scanner(System.in);
+		int i, j;
+		int mp, hp, exp;
+		String name;
+		int zhaoShi;
+		for(i = 0; i < 2; i++)
+		{
+			jueSe[i] = new type1();
+		}
+
+		for(i = 0; i < 2; i++)
+		{
+			System.out.println("请输入第" + (i+1) +"个角色的信息：");
+			System.out.print("名字：");
+			name = in.nextLine();
+			System.out.println(name);
+			System.out.print("hp值：");
+			hp = in.nextInt();
+			System.out.println(hp);
+			System.out.print("mp值：");
+			mp = in.nextInt();
+			System.out.println(mp);
+			System.out.print("exp值：");
+			exp = in.nextInt();
+			System.out.println(exp);
+			in.nextLine();
+			System.out.println("请输入招式序号（1：治疗，2：攻击）：");
+			zhaoShi = in.nextInt();
+			System.out.println(zhaoShi);
+			in.nextLine();
+			jueSe[i].init(name, i, 0, hp, mp, exp, zhaoShi);
+		}
+	}
+}
+
+/**
+ * 战场：包括地图和玩家双方
+ * @author Administrator
+ *
+ */
+class War
+{
+	int N;
+	boolean checkMatrix[][];
+	String war[][];
+	Player player;
+
+	
+	/**
+	 * 初始化战场和双方玩家
+	 * @param N_val 战场的规格大小
+	 */
+	War(int N_val)
+	{
+		player = new Player();
+		N = N_val;
+		war = new String [N][N];
+		checkMatrix = new boolean [N][N]; // true:可改变/无角色
+		String temp1[] = new String [N];
+		boolean temp2[] = new boolean [N];
+
+		for(int i = 0; i < N; i++) 
+		{
+			for(int j = 0; j < N; j++) 
+			{
+				war[i][j] = "#";
+				checkMatrix[i][j] = true;
+				if(i%3 == 2 && j%3 == 2)
+				{
+					war[i][j] = "×";
+					checkMatrix[i][j] = false;
+				}
+			}
+		}
+		for(int i = 0; i < 2; i++)
+		{
+			war[player.jueSe[i].x][player.jueSe[i].y] = player.jueSe[i].name;
+			checkMatrix[player.jueSe[i].x][player.jueSe[i].y] = false;
+		}
+	}
+	/**
+	 * 战场展示：人物、招式
+	 */
+	void showWar()
+	{
+		int i, j;
+		for(i = 0; i < N; i++)
+		{
+			for(j = 0; j < N; j++)
+			{
+				System.out.print(war[i][j]);
+			}
+			System.out.println();
+		}
+	}
+	/**
+	 * 判断是否能对战场的某一地方进行操作，如移动人物或释放技能
+	 * @param i 操作点的行坐标
+	 * @param j 操作点的列坐标
+	 * @return 如果能进行操作返回true， 不能操作则返回false
+	 */
+	boolean isAllow(int i, int j)
+	{
+		return checkMatrix[i][j];
+	}
+	
+	boolean check(int i, int j)
+	{
+		if(isAllow(i, j))
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	/**
+	 * 回合
+	 * @param k 玩家序号
+	 * @return 如果游戏继续返回true， 否则返回false
+	 */
+	boolean action()
+	{
+		showWar();
+		return in();
+	}
+	/**
+	 * 玩家的输入操作，当输入next juese时操作下一个角色
+	 * 有移动以及放招操作
+	 * @return 当输入stop game时游戏结束，返回false
+	 */
+	boolean in()
+	{
+		int i;
+		Scanner in = new Scanner(System.in);
+		String order = "star";
+		while(!order.equals("0"))// 输入0时还下一个玩家操作
+		{
+			System.out.print("请输入操作的角色的序列：");
+			i = in.nextInt(); // 输入角色序列
+			i--;
+			in.nextLine();
+			order = "star";
+			while(!order.equals("next"))
+			{
+				System.out.print("请输入操作（move、fangzhao、next）：");
+				order = in.nextLine();
+				if(order.equals("move"))
+				{
+					move(player.jueSe[i]);
+				}
+				if(order.equals("fangzhao"))
+				{
+					fangzhao(player.jueSe[i]);
+				}
+			}
+		}
+
+			if(order.equals("stop game"))
+				return false;
+		return true;
+	}
+	/**
+	 * 检查操作方向所对应的下一个格子是否可以进行操作，如遇障碍物或者碰墙则返回false
+	 * @param dir 操作方向
+	 * @param p 操作对象
+	 * @return 不可操作时返回false
+	 */
+	boolean check(String dir, int x, int y)
+	{
+		if(dir.equals("w"))
+		{
+			if(x-1 >= 0)
+			{
+				if(war[x-1][y].equals("#"))
+				{
+					return true;
+				}
+			}
+			else return false;
+		}
+		if(dir.equals("a"))
+		{
+			if(y-1 >= 0)
+			{
+				if(war[x][y-1].equals("#"))
+				{
+					return true;
+				}
+			}
+			else return false;
+		}
+		if(dir.equals("s"))
+		{
+			if(x+1 < N)
+			{
+				if(war[x+1][y].equals("#"))
+				{
+					return true;
+				}
+			}
+			else return false;
+		}
+		if(dir.equals("d"))
+		{
+			if(y+1 < N)
+			{
+				if(war[x][y+1].equals("#"))
+				{
+					return true;
+					
+				}
+			}
+			else return false;
+		}
+		return false;
+	}
+	/**
+	 * 随着人物的移动改变地图
+	 * @param dir 任务移动的方向
+	 * @param p 移动的人物
+	 */
+	void changeWar(String dir, type1 p)
+	{
+		if(dir.equals("w"))
+		{
+			war[p.x-1][p.y] = war[p.x][p.y];
+			war[p.x][p.y] = "#";
+		}
+		if(dir.equals("a"))
+		{
+			war[p.x][p.y-1] = war[p.x][p.y];
+			war[p.x][p.y] = "#";
+		}
+		if(dir.equals("s"))
+		{
+			war[p.x+1][p.y] = war[p.x][p.y];
+			war[p.x][p.y] = "#";
+		}
+		if(dir.equals("d"))
+		{
+			war[p.x][p.y+1] = war[p.x][p.y];
+			war[p.x][p.y] = "#";
+		}
+	}
+	/**
+	 * 
+	 *  移动角色
+	 */
+	void move(type1 jueSe)
+	{
+		Scanner in = new Scanner(System.in);
+		int i, j;
+		int k, w;
+		String direct;
+		System.out.print("方向(停止移动操作时选择“stop move”)：");
+		direct = in.nextLine();
+		// w, a, s, d
+		while(!direct.equals("stop move"))
+		{
+			if(direct.equals("w"))
+			{
+				if(check(direct, jueSe.x, jueSe.y))
+				{
+					changeWar(direct, jueSe);
+					jueSe.x--;
+				}
+			}
+			if(direct.equals("a"))
+			{
+				if(check(direct, jueSe.x, jueSe.y))
+				{
+					changeWar(direct, jueSe);
+					jueSe.y--;
+				}
+			}
+			if(direct.equals("s"))
+			{
+				if(check(direct, jueSe.x, jueSe.y))
+				{
+					changeWar(direct, jueSe);
+					jueSe.x++;
+				}
+			}
+			if(direct.equals("d"))
+			{
+				if(check(direct, jueSe.x, jueSe.y))
+				{
+					changeWar(direct, jueSe);
+					jueSe.y++;
+				}
+			}
+			showWar();
+			direct = in.nextLine();
+		}
+	}
+	/**
+	 * 寻找格子里的对象
+	 * @param str 格力里的内容
+	 * @return 当找到角色时返回角色角标，格子里的内容不是任务名时返回10
+	 */
+	int findJueSe(String str)
+	{
+		int i;
+		for(i = 0; i < 2; i++)
+		{
+			if(player.jueSe[i].name.equals(str))
+			{
+				return i;
+			}
+		}
+		return 10;
+	}
+	/**
+	 * 对攻击方向里的角色进行攻击
+	 * @param i 攻击的角色的角标
+	 * @param att 伤害值
+	 */
+	void attack(int i, int att)
+	{
+		if(i == 10)
+		{}
+		else
+		{
+			player.jueSe[i].hp -= att;
+			if(player.jueSe[i].hp <= 0)
+			{
+				war[player.jueSe[i].x][player.jueSe[i].y] = "#";
+				player.jueSe[i].hp = 0;
+				System.out.println(player.jueSe[i].name + "阵亡");
+				showWar();
+				System.out.println();
+			}
+		}
+		player.jueSe[i].show();
+	}
+/**
+ * 放箭
+ * @param jueSe 操作对象
+ */
+	void fangzhao(type1 jueSe)
+	{
+		int i, x, y;
+		String dir;
+		Scanner in = new Scanner(System.in);
+		if(jueSe.zhaoShi == 1)
+		{
+			jueSe.hp += jueSe.mp;
+		}
+		if(jueSe.zhaoShi == 2)
+		{
+			System.out.print("请输入攻击方向：");
+			dir = in.nextLine();
+			x = jueSe.x;
+			y = jueSe.y;
+			if(dir.equals("w"))
+			{
+				while(check(dir, x, y))
+				{
+					war[x-1][y] = "↑";
+					if(war[x][y].equals("↑"))
+					{
+						war[x][y] = "#";
+					}
+					x--;
+					showWar();
+					System.out.println();
+				}
+				war[x][y] = "#";
+				showWar();
+				System.out.println();
+				if(findJueSe(war[x-1][y]) != 10)
+				{
+					attack(findJueSe(war[x-1][y]), jueSe.mp);
+				}
+			}
+			if(dir.equals("a"))
+			{
+				while(check(dir, x, y))
+				{
+					war[x][y-1] = "←";
+					if(war[x][y].equals("←"))
+					{
+						war[x][y] = "#";
+					}
+					y--;
+					showWar();
+					System.out.println();
+				}
+				war[x][y] = "#";
+				showWar();
+				System.out.println();
+				if(findJueSe(war[x][y-1]) != 10)
+				{
+					attack(findJueSe(war[x][y-1]), jueSe.mp);
+				}
+			}
+			if(dir.equals("s"))
+			{
+				while(check(dir, x, y))
+				{
+					war[x+1][y] = "↓";
+					if(war[x][y].equals("↓"))
+					{
+						war[x][y] = "#";
+					}
+					x++;
+					showWar();
+					System.out.println();
+				}
+				war[x][y] = "#";
+				showWar();
+				System.out.println();
+				if(findJueSe(war[x+1][y]) != 10)
+				{
+					// System.out.println(findJueSe(war[x-1][y]));
+					attack(findJueSe(war[x+1][y]), jueSe.mp);
+				}
+			}
+			if(dir.equals("d"))
+			{
+				while(check(dir, x, y))
+				{
+					war[x][y+1] = "→";
+					if(war[x][y].equals("→"))
+					{
+						war[x][y] = "#";
+					}
+					y++;
+					showWar();
+					System.out.println();
+				}
+				war[x][y] = "#";
+				showWar();
+				System.out.println();
+				if(findJueSe(war[x][y+1]) != 10)
+				{
+					attack(findJueSe(war[x][y+1]), jueSe.mp);
+				}
+			}
+		}
+		jueSe.show();
+	}
+}
+
+public class main 
+{
+	public static void main(String[] args)
+	{
+		int N, k = 0;
+		boolean whetherContinue;
+		Scanner in = new Scanner(System.in);
+		System.out.print("请输入战场规格：");
+		N = in.nextInt();
+
+		War map = new War(N);
+
+		while(true)
+		{
+			whetherContinue = map.action();
+
+			if(!whetherContinue)
+			{
+				break;
+			}
+			k = 1-k;
+		}
+	}
+
+	private static Scanner Scanner(InputStream in)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+}

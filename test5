@@ -1,0 +1,74 @@
+package main;
+
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Random;
+
+import javax.swing.JPanel;
+
+import gui.Frame;
+import gui.Panel;
+import war.Player;
+import war.War;
+
+
+public class Main 
+{
+	Panel panel;
+	Frame frame;
+	War game;
+	int warSize = 10;
+	int followerOrder = 1;
+
+	public Main(int followerOrder, int warSize, War game) throws Exception
+	{
+		panel = new Panel(game);
+		panel.setLayout(null);
+		panel.setSize(500, 500);
+		
+		frame = new Frame();
+		frame.addKeyListener(panel);
+		frame.addMouseListener(panel);
+		frame.addWindowListener(new WindowAdapter()
+		{
+			public void windowClosing(WindowEvent e)
+			{System.exit(0);} 
+		});
+		frame.setLayout(null);
+		frame.getContentPane().add(panel);
+		frame.setVisible(true);
+		
+		this.game = game;
+		this.warSize = warSize;
+		this.followerOrder = followerOrder;
+	}
+
+	public void start() throws IOException
+	{
+		// 游戏初始化
+		frame.setGame(game);
+		// 机器人初始化, 开启线程
+		Player robot = new Player(game, 1, new Random().nextInt(2)+1);
+		int x = robot.follower.x;
+		int y = robot.follower.y;
+		game.war[x][y] = robot.follower.name;
+		Thread threadRobot = new Thread(robot);
+		threadRobot.start();
+		panel.setRobot(robot);
+		game.setRobot(robot);
+		// 界面线程开始
+		Thread threadPanel = new Thread(panel);
+		threadPanel.start();
+		// 游戏开始
+		Thread threadGame = new Thread(game);
+		threadGame.start();
+	}
+}
